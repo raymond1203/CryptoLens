@@ -1,4 +1,3 @@
-# .env 파일 필요: cp .env.example .env 후 실행
 services:
   app:
     build:

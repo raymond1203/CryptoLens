@@ -165,14 +165,6 @@ dependencies = [
     { name = "uvicorn", extra = ["standard"] },
 ]
 
-[package.optional-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
@@ -191,17 +183,12 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28" },
     { name = "openai", specifier = ">=2.30" },
     { name = "pydantic-settings", specifier = ">=2.13" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=1.3" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1" },
     { name = "python-telegram-bot", specifier = ">=22.7" },
     { name = "qdrant-client", specifier = ">=1.17" },
     { name = "redis", specifier = ">=7.4" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15" },
     { name = "telethon", specifier = ">=1.42" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.42" },
 ]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [
