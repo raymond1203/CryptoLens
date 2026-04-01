@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 import redis.asyncio as aioredis
@@ -7,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from qdrant_client import AsyncQdrantClient
 
 from src.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -41,14 +44,16 @@ async def health():
     try:
         await app.state.qdrant.get_collections()
         checks["qdrant"] = "ok"
-    except Exception as e:
-        checks["qdrant"] = f"error: {e}"
+    except Exception:
+        logger.exception("Qdrant health check failed")
+        checks["qdrant"] = "unavailable"
 
     try:
         await app.state.redis.ping()
         checks["redis"] = "ok"
-    except Exception as e:
-        checks["redis"] = f"error: {e}"
+    except Exception:
+        logger.exception("Redis health check failed")
+        checks["redis"] = "unavailable"
 
     status = "ok" if all(v == "ok" for v in checks.values()) else "degraded"
     return {"status": status, "checks": checks}
