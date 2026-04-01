@@ -1,6 +1,7 @@
 import logging
 
 from qdrant_client import AsyncQdrantClient, models
+from qdrant_client.http.exceptions import UnexpectedResponse
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ SPARSE_VECTOR_NAME = "bm25"
 
 
 async def ensure_collection(client: AsyncQdrantClient) -> None:
-    """컬렉션이 없으면 생성한다. 있으면 스킵."""
+    """컬렉션이 없으면 생성하고, Payload 인덱스는 항상 reconciliation한다."""
     collections = await client.get_collections()
     existing = [c.name for c in collections.collections]
 
@@ -58,6 +59,9 @@ async def _ensure_payload_indexes(client: AsyncQdrantClient) -> None:
                 field_name=field_name,
                 field_schema=field_schema,
             )
-        except Exception:
-            logger.debug("인덱스 '%s' 이미 존재, 스킵", field_name)
+        except UnexpectedResponse as e:
+            if e.status_code == 400:
+                logger.debug("인덱스 '%s' 이미 존재, 스킵", field_name)
+            else:
+                raise
     logger.info("Payload 인덱스 확인 완료")
