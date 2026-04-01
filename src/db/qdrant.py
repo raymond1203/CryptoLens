@@ -15,10 +15,13 @@ async def ensure_collection(client: AsyncQdrantClient) -> None:
     collections = await client.get_collections()
     existing = [c.name for c in collections.collections]
 
-    if COLLECTION_NAME in existing:
-        logger.info("컬렉션 '%s' 이미 존재, 스킵", COLLECTION_NAME)
-        return
+    if COLLECTION_NAME not in existing:
+        await _create_collection(client)
 
+    await _ensure_payload_indexes(client)
+
+
+async def _create_collection(client: AsyncQdrantClient) -> None:
     await client.create_collection(
         collection_name=COLLECTION_NAME,
         vectors_config={
@@ -40,16 +43,21 @@ async def ensure_collection(client: AsyncQdrantClient) -> None:
     )
     logger.info("컬렉션 '%s' 생성 완료", COLLECTION_NAME)
 
-    # Payload 인덱스 생성
-    for field in ["source", "language", "category"]:
-        await client.create_payload_index(
-            collection_name=COLLECTION_NAME,
-            field_name=field,
-            field_schema=models.PayloadSchemaType.KEYWORD,
-        )
-    await client.create_payload_index(
-        collection_name=COLLECTION_NAME,
-        field_name="timestamp",
-        field_schema=models.PayloadSchemaType.DATETIME,
-    )
-    logger.info("Payload 인덱스 생성 완료 (source, language, category, timestamp)")
+
+async def _ensure_payload_indexes(client: AsyncQdrantClient) -> None:
+    indexes = [
+        ("source", models.PayloadSchemaType.KEYWORD),
+        ("language", models.PayloadSchemaType.KEYWORD),
+        ("category", models.PayloadSchemaType.KEYWORD),
+        ("timestamp", models.PayloadSchemaType.DATETIME),
+    ]
+    for field_name, field_schema in indexes:
+        try:
+            await client.create_payload_index(
+                collection_name=COLLECTION_NAME,
+                field_name=field_name,
+                field_schema=field_schema,
+            )
+        except Exception:
+            logger.debug("인덱스 '%s' 이미 존재, 스킵", field_name)
+    logger.info("Payload 인덱스 확인 완료")
