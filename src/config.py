@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # LLM
     anthropic_api_key: str = ""
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # Korean Sources
     upbit_api_key: str = ""
     bithumb_api_key: str = ""
-    telegram_api_id: str = ""
+    telegram_api_id: int = 0
     telegram_api_hash: str = ""
 
     # Legal
