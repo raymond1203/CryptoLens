@@ -12,15 +12,19 @@ COPY bot/ bot/
 # Stage 2: Runtime
 FROM python:3.14-slim-bookworm
 
+RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -m appuser
+
 WORKDIR /app
 
-COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app/src /app/src
-COPY --from=builder /app/bot /app/bot
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
+COPY --from=builder --chown=appuser:appuser /app/src /app/src
+COPY --from=builder --chown=appuser:appuser /app/bot /app/bot
 
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+
+USER appuser
 
 EXPOSE 8000
 
