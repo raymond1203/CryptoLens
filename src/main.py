@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from qdrant_client import AsyncQdrantClient
 
 from src.config import settings
+from src.db.qdrant import ensure_collection
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,8 @@ async def lifespan(app: FastAPI):
     app.state.qdrant = AsyncQdrantClient(host=settings.qdrant_host, port=settings.qdrant_port)
     app.state.redis = aioredis.from_url(settings.redis_url, decode_responses=True)
     app.state.anthropic = AsyncAnthropic(api_key=settings.anthropic_api_key)
+
+    await ensure_collection(app.state.qdrant)
 
     yield
 
