@@ -7,6 +7,7 @@ from qdrant_client import models
 from src.db.qdrant import COLLECTION_NAME, DENSE_VECTOR_NAME, SPARSE_VECTOR_NAME
 from src.rag.embedder import (
     BATCH_SIZE,
+    _tokenize_to_sparse,
     embed_dense,
     embed_sparse,
     upsert_documents,
@@ -82,8 +83,9 @@ class TestEmbedSparse:
 
         assert len(vec.indices) == len(vec.values)
         assert len(vec.indices) == 2  # 고유 토큰 2개
-        # "bitcoin"은 2회 등장
-        bitcoin_id = hash("bitcoin") % (2**31)
+        # "bitcoin"은 2회 등장 — _tokenize_to_sparse와 동일 해시 로직으로 검증
+        ref = _tokenize_to_sparse("bitcoin")
+        bitcoin_id = ref.indices[0]
         idx = list(vec.indices).index(bitcoin_id)
         assert vec.values[idx] == 2.0
 
@@ -130,10 +132,6 @@ class TestUpsertDocuments:
     async def test_upsert_batches_large_input(self, mock_qdrant, mock_openai, mock_redis):
         count = BATCH_SIZE + 10
         mock_redis.get.return_value = None
-        mock_openai.embeddings.create.return_value = _make_embedding_response(
-            [[0.1]] * min(count, BATCH_SIZE)
-        )
-        # 두 번째 배치
         mock_openai.embeddings.create.side_effect = [
             _make_embedding_response([[0.1]] * BATCH_SIZE),
             _make_embedding_response([[0.1]] * 10),

@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import uuid
 
@@ -37,7 +38,7 @@ async def embed_dense(
     uncached_texts = [texts[i] for i in uncached_indices]
     embeddings = await _call_openai_embeddings(openai, uncached_texts)
 
-    for idx, embedding in zip(uncached_indices, embeddings):
+    for idx, embedding in zip(uncached_indices, embeddings, strict=True):
         results[idx] = embedding
         await set_cached_embedding(redis, texts[idx], embedding)
 
@@ -72,7 +73,7 @@ def _tokenize_to_sparse(text: str) -> models.SparseVector:
     """텍스트를 whitespace 토큰화하여 Sparse 벡터로 변환한다."""
     token_counts: dict[int, float] = {}
     for token in text.lower().split():
-        token_id = hash(token) % (2**31)
+        token_id = int.from_bytes(hashlib.md5(token.encode()).digest()[:4]) % (2**31)
         token_counts[token_id] = token_counts.get(token_id, 0.0) + 1.0
 
     indices = sorted(token_counts.keys())
@@ -112,7 +113,9 @@ async def upsert_documents(
             },
             payload=payload,
         )
-        for pid, dense, sparse, payload in zip(point_ids, dense_vectors, sparse_vectors, payloads)
+        for pid, dense, sparse, payload in zip(
+            point_ids, dense_vectors, sparse_vectors, payloads, strict=True
+        )
     ]
 
     for start in range(0, len(points), BATCH_SIZE):
