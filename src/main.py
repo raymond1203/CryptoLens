@@ -5,6 +5,7 @@ import redis.asyncio as aioredis
 from anthropic import AsyncAnthropic
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from openai import AsyncOpenAI
 from qdrant_client import AsyncQdrantClient
 
 from src.config import settings
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI):
     app.state.qdrant = AsyncQdrantClient(host=settings.qdrant_host, port=settings.qdrant_port)
     app.state.redis = aioredis.from_url(settings.redis_url, decode_responses=True)
     app.state.anthropic = AsyncAnthropic(api_key=settings.anthropic_api_key)
+    app.state.openai = AsyncOpenAI(api_key=settings.openai_api_key)
 
     await ensure_collection(app.state.qdrant)
 
@@ -28,6 +30,7 @@ async def lifespan(app: FastAPI):
     await app.state.qdrant.close()
     await app.state.redis.aclose()
     await app.state.anthropic.close()
+    await app.state.openai.close()
 
 
 app = FastAPI(title="CryptoLens", version="0.1.0", lifespan=lifespan)
