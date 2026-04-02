@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 EMBEDDING_PREFIX = "emb"
 EMBEDDING_TTL = 86400  # 24시간
+DEFAULT_CACHE_TTL = 3600  # 1시간
 
 
 async def get_cached_embedding(redis: Redis, text: str) -> list[float] | None:
@@ -31,7 +32,7 @@ async def cache_get(redis: Redis, key: str) -> str | None:
     return await redis.get(key)
 
 
-async def cache_set(redis: Redis, key: str, value: str, ttl: int = 3600) -> None:
+async def cache_set(redis: Redis, key: str, value: str, ttl: int = DEFAULT_CACHE_TTL) -> None:
     """범용 캐시 저장."""
     await redis.set(key, value, ex=ttl)
 

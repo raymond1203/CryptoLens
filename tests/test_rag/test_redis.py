@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from src.db.redis import (
+    DEFAULT_CACHE_TTL,
     EMBEDDING_PREFIX,
     EMBEDDING_TTL,
     cache_get,
@@ -76,4 +77,4 @@ class TestGenericCache:
     async def test_cache_set_uses_default_ttl(self, mock_redis):
         await cache_set(mock_redis, "key", "val")
 
-        mock_redis.set.assert_called_once_with("key", "val", ex=3600)
+        mock_redis.set.assert_called_once_with("key", "val", ex=DEFAULT_CACHE_TTL)
