@@ -14,14 +14,14 @@ def mock_stream_manager(
     output_tokens: int = 50,
 ):
     """anthropic.messages.stream()이 반환하는 async context manager를 모킹한다."""
-    mock_stream = AsyncMock()
-    mock_stream.text_stream = async_iter(chunks)
-    mock_stream.get_final_message.return_value = MagicMock(
-        usage=MagicMock(input_tokens=input_tokens, output_tokens=output_tokens)
-    )
 
     @asynccontextmanager
     async def stream_cm(**kwargs):
+        mock_stream = AsyncMock()
+        mock_stream.text_stream = async_iter(chunks)
+        mock_stream.get_final_message.return_value = MagicMock(
+            usage=MagicMock(input_tokens=input_tokens, output_tokens=output_tokens)
+        )
         yield mock_stream
 
     return stream_cm
