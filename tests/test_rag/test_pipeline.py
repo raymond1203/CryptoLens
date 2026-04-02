@@ -1,25 +1,10 @@
-from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from qdrant_client import models
 
 from src.rag.pipeline import rag_query
-
-
-def _mock_stream_manager(chunks: list[str]):
-    """anthropic.messages.stream() async context manager 모킹."""
-    mock_stream = AsyncMock()
-    mock_stream.text_stream = _async_iter(chunks)
-    mock_stream.get_final_message.return_value = MagicMock(
-        usage=MagicMock(input_tokens=200, output_tokens=100)
-    )
-
-    @asynccontextmanager
-    async def stream_cm(**kwargs):
-        yield mock_stream
-
-    return stream_cm
+from tests.test_rag.conftest import mock_stream_manager
 
 
 @pytest.fixture
@@ -47,7 +32,7 @@ def mock_deps():
     qdrant.query_points.return_value = MagicMock(points=[point])
 
     # generate_stream: 스트리밍 응답
-    anthropic.messages.stream = _mock_stream_manager(["비트코인이 ", "$100k를 돌파했습니다."])
+    anthropic.messages.stream = mock_stream_manager(["비트코인이 ", "$100k를 돌파했습니다."])
 
     return {"qdrant": qdrant, "openai": openai, "redis": redis, "anthropic": anthropic}
 
@@ -82,8 +67,3 @@ class TestRagQuery:
 
         call_kwargs = mock_deps["qdrant"].query_points.call_args.kwargs
         assert call_kwargs["query_filter"] is not None
-
-
-async def _async_iter(items):
-    for item in items:
-        yield item
